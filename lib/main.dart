@@ -1,4 +1,6 @@
+
 import 'package:flutter/material.dart';
+import 'journal_capture_screen.dart';
 
 void main() {
   runApp(MezanApp());
@@ -25,6 +27,16 @@ class HomePage extends StatelessWidget {
       ),
       body: ListView(
         children: [
+          ListTile(
+            leading: Icon(Icons.camera_alt),
+            title: Text('تصوير اليومية'),
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const JournalCaptureScreen()),
+              );
+            },
+          ),
           ListTile(
             leading: Icon(Icons.people),
             title: Text('الموظفون'),
