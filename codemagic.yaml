@@ -1,3 +1,4 @@
+
 workflows:
   android-workflow:
     name: Android Build
@@ -5,6 +6,9 @@ workflows:
     environment:
       flutter: stable
     scripts:
+      - name: Generate android platform files
+        script: |
+          flutter create --platforms=android .
       - name: Get Flutter packages
         script: |
           flutter pub get
