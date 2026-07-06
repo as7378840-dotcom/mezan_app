@@ -117,4 +117,158 @@ class _AddEmployeeSheet extends StatefulWidget {
   final Color themeColor;
   final VoidCallback onSaved;
 
-  const _AddEmployeeSheet({required this.themeColor, required
+  const _AddEmployeeSheet({required this.themeColor, required this.onSaved});
+
+  @override
+  State<_AddEmployeeSheet> createState() => _AddEmployeeSheetState();
+}
+
+class _AddEmployeeSheetState extends State<_AddEmployeeSheet> {
+  final _nameController = TextEditingController();
+  final _phoneController = TextEditingController();
+  final _categoryController = TextEditingController();
+  final _priceController = TextEditingController();
+  final _notesController = TextEditingController();
+  File? _photo;
+
+  Future<void> _pickPhoto(ImageSource source) async {
+    final picker = ImagePicker();
+    final picked = await picker.pickImage(source: source, imageQuality: 85);
+    if (picked != null) {
+      setState(() {
+        _photo = File(picked.path);
+      });
+    }
+  }
+
+  Future<void> _saveEmployee() async {
+    if (_nameController.text.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('الرجاء إدخال اسم الموظف')),
+      );
+      return;
+    }
+
+    final db = await DatabaseHelper.instance.database;
+    final now = DateTime.now().toIso8601String();
+
+    await db.insert('employees', {
+      'name': _nameController.text.trim(),
+      'photoPath': _photo?.path,
+      'phone': _phoneController.text.trim(),
+      'category': _categoryController.text.trim(),
+      'unitPrice': double.tryParse(_priceController.text.trim()) ?? 0,
+      'notes': _notesController.text.trim(),
+      'createdAt': now,
+      'updatedAt': now,
+    });
+
+    widget.onSaved();
+    if (mounted) Navigator.pop(context);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: EdgeInsets.only(
+        bottom: MediaQuery.of(context).viewInsets.bottom,
+        left: 16,
+        right: 16,
+        top: 16,
+      ),
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      child: SingleChildScrollView(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Center(
+              child: Text(
+                'إضافة موظف جديد',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: widget.themeColor,
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+            Center(
+              child: GestureDetector(
+                onTap: () => showModalBottomSheet(
+                  context: context,
+                  builder: (context) => SafeArea(
+                    child: Wrap(
+                      children: [
+                        ListTile(
+                          leading: const Icon(Icons.camera_alt),
+                          title: const Text('تصوير'),
+                          onTap: () {
+                            Navigator.pop(context);
+                            _pickPhoto(ImageSource.camera);
+                          },
+                        ),
+                        ListTile(
+                          leading: const Icon(Icons.photo_library),
+                          title: const Text('من المعرض'),
+                          onTap: () {
+                            Navigator.pop(context);
+                            _pickPhoto(ImageSource.gallery);
+                          },
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                child: CircleAvatar(
+                  radius: 40,
+                  backgroundColor: widget.themeColor.withOpacity(0.15),
+                  backgroundImage: _photo != null ? FileImage(_photo!) : null,
+                  child: _photo == null
+                      ? Icon(Icons.camera_alt, color: widget.themeColor)
+                      : null,
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: _nameController,
+              decoration: const InputDecoration(labelText: 'الاسم'),
+            ),
+            TextField(
+              controller: _phoneController,
+              decoration: const InputDecoration(labelText: 'رقم الهاتف'),
+              keyboardType: TextInputType.phone,
+            ),
+            TextField(
+              controller: _categoryController,
+              decoration: const InputDecoration(labelText: 'الصنف'),
+            ),
+            TextField(
+              controller: _priceController,
+              decoration: const InputDecoration(labelText: 'سعر الوحدة'),
+              keyboardType: TextInputType.number,
+            ),
+            TextField(
+              controller: _notesController,
+              decoration: const InputDecoration(labelText: 'ملاحظات'),
+              maxLines: 2,
+            ),
+            const SizedBox(height: 16),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: widget.themeColor,
+                padding: const EdgeInsets.symmetric(vertical: 14),
+              ),
+              onPressed: _saveEmployee,
+              child: const Text('حفظ', style: TextStyle(color: Colors.white)),
+            ),
+            const SizedBox(height: 20),
+          ],
+        ),
+      ),
+    );
+  }
+}
