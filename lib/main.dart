@@ -15,7 +15,6 @@ class MezanApp extends StatelessWidget {
       title: 'ميزان ERP',
       theme: ThemeData(
         scaffoldBackgroundColor: const Color(0xFFFAF6F0),
-        fontFamily: 'Cairo',
         colorScheme: ColorScheme.fromSeed(
           seedColor: const Color(0xFF22303C),
         ),
@@ -30,7 +29,7 @@ class HomePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final sections = [
+    final List<_SectionItem> sections = [
       _SectionItem('الموظفون', Icons.people, const Color(0xFF2C3E67), null),
       _SectionItem('التجار', Icons.storefront, const Color(0xFF6B8E4E), null),
       _SectionItem('المحلات والبسطات', Icons.store_mall_directory, const Color(0xFFC77B3E), null),
@@ -63,8 +62,7 @@ class HomePage extends StatelessWidget {
             childAspectRatio: 1.05,
           ),
           itemBuilder: (context, index) {
-            final section = sections[index];
-            return _SectionCard(section: section);
+            return _SectionCard(section: sections[index]);
           },
         ),
       ),
@@ -115,3 +113,23 @@ class _SectionCard extends StatelessWidget {
                 decoration: BoxDecoration(
                   color: section.color,
                   shape: BoxShape.circle,
+                ),
+                child: Icon(section.icon, color: Colors.white, size: 28),
+              ),
+              const SizedBox(height: 10),
+              Text(
+                section.title,
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: section.color,
+                  fontSize: 14,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
