@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'journal_capture_screen.dart';
+import 'employees_screen.dart';
 
 void main() {
   runApp(const MezanApp());
@@ -30,7 +31,7 @@ class HomePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final List<_SectionItem> sections = [
-      _SectionItem('الموظفون', Icons.people, const Color(0xFF2C3E67), null),
+      _SectionItem('الموظفون', Icons.people, const Color(0xFF2C3E67), const EmployeesScreen()),
       _SectionItem('التجار', Icons.storefront, const Color(0xFF6B8E4E), null),
       _SectionItem('المحلات والبسطات', Icons.store_mall_directory, const Color(0xFFC77B3E), null),
       _SectionItem('المخزون', Icons.inventory_2, const Color(0xFF5B4B8A), null),
