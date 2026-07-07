@@ -8,6 +8,9 @@ workflows:
       - name: Get Flutter packages
         script: |
           flutter packages pub get
+      - name: Generate android platform files
+        script: |
+          flutter create . --platforms=android
       - name: Build APK (Release)
         script: |
           flutter build apk --release
