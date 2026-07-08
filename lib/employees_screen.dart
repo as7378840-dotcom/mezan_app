@@ -68,17 +68,15 @@ class _EmployeesScreenState extends State<EmployeesScreen> {
                     borderRadius: BorderRadius.circular(14),
                   ),
                   child: ListTile(
-                    contentPadding: const EdgeInsets.all(10),
                     onTap: () {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => EmployeeLedgerScreen(
-                            employeeId: emp['id'],
-                          ),
+                          builder: (context) => EmployeeLedgerScreen(employee: emp),
                         ),
                       );
                     },
+                    contentPadding: const EdgeInsets.all(10),
                     leading: CircleAvatar(
                       radius: 26,
                       backgroundColor: themeColor.withOpacity(0.15),
@@ -93,9 +91,7 @@ class _EmployeesScreenState extends State<EmployeesScreen> {
                       emp['name'] ?? '',
                       style: const TextStyle(fontWeight: FontWeight.bold),
                     ),
-                    subtitle: Text(
-                      '${emp['category'] ?? ''} - ${emp['phone'] ?? ''}',
-                    ),
+                    subtitle: Text(emp['phone'] ?? ''),
                     trailing: IconButton(
                       icon: const Icon(Icons.delete, color: Colors.red),
                       onPressed: () => _deleteEmployee(emp['id']),
@@ -126,9 +122,6 @@ class _AddEmployeeSheet extends StatefulWidget {
 class _AddEmployeeSheetState extends State<_AddEmployeeSheet> {
   final _nameController = TextEditingController();
   final _phoneController = TextEditingController();
-  final _categoryController = TextEditingController();
-  final _priceController = TextEditingController();
-  final _notesController = TextEditingController();
   File? _photo;
 
   Future<void> _pickPhoto(ImageSource source) async {
@@ -156,9 +149,6 @@ class _AddEmployeeSheetState extends State<_AddEmployeeSheet> {
       'name': _nameController.text.trim(),
       'photoPath': _photo?.path,
       'phone': _phoneController.text.trim(),
-      'category': _categoryController.text.trim(),
-      'unitPrice': double.tryParse(_priceController.text.trim()) ?? 0,
-      'notes': _notesController.text.trim(),
       'createdAt': now,
       'updatedAt': now,
     });
@@ -241,20 +231,6 @@ class _AddEmployeeSheetState extends State<_AddEmployeeSheet> {
               controller: _phoneController,
               decoration: const InputDecoration(labelText: 'رقم الهاتف'),
               keyboardType: TextInputType.phone,
-            ),
-            TextField(
-              controller: _categoryController,
-              decoration: const InputDecoration(labelText: 'الصنف'),
-            ),
-            TextField(
-              controller: _priceController,
-              decoration: const InputDecoration(labelText: 'سعر الوحدة'),
-              keyboardType: TextInputType.number,
-            ),
-            TextField(
-              controller: _notesController,
-              decoration: const InputDecoration(labelText: 'ملاحظات'),
-              maxLines: 2,
             ),
             const SizedBox(height: 16),
             ElevatedButton(
