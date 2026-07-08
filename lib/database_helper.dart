@@ -17,8 +17,9 @@ class DatabaseHelper {
     String path = join(await getDatabasesPath(), 'mezan.db');
     return await openDatabase(
       path,
-      version: 1,
+      version: 2,
       onCreate: _onCreate,
+      onUpgrade: _onUpgrade,
     );
   }
 
@@ -38,14 +39,30 @@ class DatabaseHelper {
       );
     ''');
 
-    // حركات الموظفين (إنتاج، سلف، صرف)
+    // حركات الموظفين (إنتاج، سلف، صرف) - قديم
     await db.execute('''
       CREATE TABLE employee_transactions (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         employeeId INTEGER NOT NULL,
-        type TEXT NOT NULL, -- production, advance, payment
+        type TEXT NOT NULL,
         quantity REAL DEFAULT 0,
         amount REAL DEFAULT 0,
+        note TEXT,
+        date TEXT NOT NULL,
+        FOREIGN KEY (employeeId) REFERENCES employees (id) ON DELETE CASCADE
+      );
+    ''');
+
+    // كشف حساب الموظف (صنف، عدد، سعر، صرفة، سلفة)
+    await db.execute('''
+      CREATE TABLE employee_ledger (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        employeeId INTEGER NOT NULL,
+        category TEXT,
+        quantity REAL DEFAULT 0,
+        price REAL DEFAULT 0,
+        disbursement REAL DEFAULT 0,
+        advance REAL DEFAULT 0,
         note TEXT,
         date TEXT NOT NULL,
         FOREIGN KEY (employeeId) REFERENCES employees (id) ON DELETE CASCADE
@@ -66,12 +83,11 @@ class DatabaseHelper {
       );
     ''');
 
-    // حركات التجار (مبالغ مستلمة، مبالغ متبقية)
     await db.execute('''
       CREATE TABLE merchant_transactions (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         merchantId INTEGER NOT NULL,
-        type TEXT NOT NULL, -- received, remaining
+        type TEXT NOT NULL,
         amount REAL DEFAULT 0,
         note TEXT,
         date TEXT NOT NULL,
@@ -92,12 +108,11 @@ class DatabaseHelper {
       );
     ''');
 
-    // حركات المحلات (مبيعات، مرتجعات)
     await db.execute('''
       CREATE TABLE shop_transactions (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         shopId INTEGER NOT NULL,
-        type TEXT NOT NULL, -- sale, return
+        type TEXT NOT NULL,
         amount REAL DEFAULT 0,
         note TEXT,
         date TEXT NOT NULL,
@@ -110,7 +125,7 @@ class DatabaseHelper {
       CREATE TABLE inventory (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         name TEXT NOT NULL,
-        category TEXT, -- خيوط، لمبات، أسلاك، ألوان، مواد خام
+        category TEXT,
         quantity REAL DEFAULT 0,
         unit TEXT,
         minQuantityAlert REAL DEFAULT 0,
@@ -120,12 +135,11 @@ class DatabaseHelper {
       );
     ''');
 
-    // حركة المخزون (دخول، خروج)
     await db.execute('''
       CREATE TABLE inventory_transactions (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         inventoryId INTEGER NOT NULL,
-        type TEXT NOT NULL, -- in, out
+        type TEXT NOT NULL,
         quantity REAL DEFAULT 0,
         note TEXT,
         date TEXT NOT NULL,
@@ -137,7 +151,7 @@ class DatabaseHelper {
     await db.execute('''
       CREATE TABLE expenses (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
-        category TEXT NOT NULL, -- كهرباء، بترول، رصيد، إيجار، نقل، لمبات، أسلاك، صيانة، مواد، أخرى
+        category TEXT NOT NULL,
         amount REAL DEFAULT 0,
         note TEXT,
         date TEXT NOT NULL,
@@ -145,13 +159,13 @@ class DatabaseHelper {
       );
     ''');
 
-    // ================== دفاتر اليومية (المرجع المصور) ==================
+    // ================== دفاتر اليومية ==================
     await db.execute('''
       CREATE TABLE journal_entries (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         imagePath TEXT,
         extractedText TEXT,
-        status TEXT DEFAULT 'pending', -- pending, reviewed, posted
+        status TEXT DEFAULT 'pending',
         date TEXT NOT NULL,
         createdAt TEXT
       );
@@ -163,7 +177,7 @@ class DatabaseHelper {
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         username TEXT NOT NULL UNIQUE,
         passwordHash TEXT NOT NULL,
-        role TEXT NOT NULL, -- admin, accountant, viewer
+        role TEXT NOT NULL,
         createdAt TEXT
       );
     ''');
@@ -174,9 +188,28 @@ class DatabaseHelper {
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         tableName TEXT NOT NULL,
         recordId INTEGER NOT NULL,
-        status TEXT NOT NULL, -- pending, synced
+        status TEXT NOT NULL,
         updatedAt TEXT
       );
     ''');
+  }
+
+  Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
+    if (oldVersion < 2) {
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS employee_ledger (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          employeeId INTEGER NOT NULL,
+          category TEXT,
+          quantity REAL DEFAULT 0,
+          price REAL DEFAULT 0,
+          disbursement REAL DEFAULT 0,
+          advance REAL DEFAULT 0,
+          note TEXT,
+          date TEXT NOT NULL,
+          FOREIGN KEY (employeeId) REFERENCES employees (id) ON DELETE CASCADE
+        );
+      ''');
+    }
   }
 }
