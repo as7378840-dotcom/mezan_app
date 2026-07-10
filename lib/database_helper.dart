@@ -17,9 +17,8 @@ class DatabaseHelper {
     String path = join(await getDatabasesPath(), 'mezan.db');
     return await openDatabase(
       path,
-      version: 2,
+      version: 1,
       onCreate: _onCreate,
-      onUpgrade: _onUpgrade,
     );
   }
 
@@ -39,7 +38,6 @@ class DatabaseHelper {
       );
     ''');
 
-    // حركات الموظفين (إنتاج، سلف، صرف) - قديم
     await db.execute('''
       CREATE TABLE employee_transactions (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -47,22 +45,6 @@ class DatabaseHelper {
         type TEXT NOT NULL,
         quantity REAL DEFAULT 0,
         amount REAL DEFAULT 0,
-        note TEXT,
-        date TEXT NOT NULL,
-        FOREIGN KEY (employeeId) REFERENCES employees (id) ON DELETE CASCADE
-      );
-    ''');
-
-    // كشف حساب الموظف (صنف، عدد، سعر، صرفة، سلفة)
-    await db.execute('''
-      CREATE TABLE employee_ledger (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        employeeId INTEGER NOT NULL,
-        category TEXT,
-        quantity REAL DEFAULT 0,
-        price REAL DEFAULT 0,
-        disbursement REAL DEFAULT 0,
-        advance REAL DEFAULT 0,
         note TEXT,
         date TEXT NOT NULL,
         FOREIGN KEY (employeeId) REFERENCES employees (id) ON DELETE CASCADE
@@ -77,6 +59,7 @@ class DatabaseHelper {
         photoPath TEXT,
         phone TEXT,
         city TEXT,
+        relationType TEXT DEFAULT 'بضاعة',
         notes TEXT,
         createdAt TEXT,
         updatedAt TEXT
@@ -171,7 +154,7 @@ class DatabaseHelper {
       );
     ''');
 
-    // ================== المستخدمون والصلاحيات ==================
+    // ================== المستخدمون ==================
     await db.execute('''
       CREATE TABLE users (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -182,7 +165,7 @@ class DatabaseHelper {
       );
     ''');
 
-    // ================== جدول تتبع المزامنة ==================
+    // ================== المزامنة ==================
     await db.execute('''
       CREATE TABLE sync_log (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -192,24 +175,5 @@ class DatabaseHelper {
         updatedAt TEXT
       );
     ''');
-  }
-
-  Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
-    if (oldVersion < 2) {
-      await db.execute('''
-        CREATE TABLE IF NOT EXISTS employee_ledger (
-          id INTEGER PRIMARY KEY AUTOINCREMENT,
-          employeeId INTEGER NOT NULL,
-          category TEXT,
-          quantity REAL DEFAULT 0,
-          price REAL DEFAULT 0,
-          disbursement REAL DEFAULT 0,
-          advance REAL DEFAULT 0,
-          note TEXT,
-          date TEXT NOT NULL,
-          FOREIGN KEY (employeeId) REFERENCES employees (id) ON DELETE CASCADE
-        );
-      ''');
-    }
   }
 }
