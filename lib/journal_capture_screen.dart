@@ -48,7 +48,7 @@ class _JournalCaptureScreenState extends State<JournalCaptureScreen> {
       final base64Image = base64Encode(bytes);
 
       const prompt = '''
-أنت مساعد لقراءة دفاتر يومية مصنع عربية مكتوبة بخط اليد.
+أنت مساعد لقراءة دفاتر يومية مصنع عربية مكتوبة بخط اليد أو مطبوعة.
 اقرأ الصورة المرفقة واستخرج كل الحركات المالية المذكورة فيها.
 
 أرجع النتيجة بصيغة JSON فقط بدون أي نص إضافي، على الشكل التالي:
@@ -71,7 +71,7 @@ class _JournalCaptureScreenState extends State<JournalCaptureScreen> {
 - إذا كانت employee فـ type تكون: production (إنتاج), advance (سلفة), payment (صرف)
 - إذا كانت merchant فـ type تكون: received (مستلم), remaining (متبقي)
 - إذا كانت expense فـ type تكون اسم نوع المصروف مثل: كهرباء، بترول، إيجار، نقل، صيانة، مواد، أخرى
-- quantity للكمية (خاص بالإنتاج فقط)، amount للمبلغ بالريال
+- quantity للكمية (خاص بالإنتاج فقط)، amount للمبلغ بالريال (بالنسبة للإنتاج amount هو سعر الوحدة الواحدة)
 - إذا لم تستطع تحديد نوع سطر معين، تجاهله ولا تخترع بيانات
 - أرجع فقط JSON صالح بدون Markdown ولا علامات
 ''';
@@ -161,11 +161,24 @@ class _JournalCaptureScreenState extends State<JournalCaptureScreen> {
           failedNames.add(name);
           continue;
         }
-        await db.insert('employee_transactions', {
+
+        double qty = 0, price = 0, disb = 0, adv = 0;
+        if (type == 'production') {
+          qty = quantity;
+          price = amount;
+        } else if (type == 'advance') {
+          adv = amount;
+        } else if (type == 'payment') {
+          disb = amount;
+        }
+
+        await db.insert('employee_ledger', {
           'employeeId': emp.first['id'],
-          'type': type,
-          'quantity': quantity,
-          'amount': amount,
+          'category': type,
+          'quantity': qty,
+          'price': price,
+          'disbursement': disb,
+          'advance': adv,
           'note': note,
           'date': now,
         });
