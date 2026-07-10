@@ -41,10 +41,11 @@ class _EmployeeLedgerScreenState extends State<EmployeeLedgerScreen> {
   }
 
   double _netOf(Map<String, dynamic> e) {
+    final qty = (e['quantity'] ?? 0) as num;
     final price = (e['price'] ?? 0) as num;
     final disb = (e['disbursement'] ?? 0) as num;
     final adv = (e['advance'] ?? 0) as num;
-    return (price - disb - adv).toDouble();
+    return ((qty * price) - disb - adv).toDouble();
   }
 
   Map<String, double> _totals() {
@@ -78,6 +79,12 @@ class _EmployeeLedgerScreenState extends State<EmployeeLedgerScreen> {
   }
 
   String _todayStr() => DateTime.now().toIso8601String().split('T')[0];
+
+  String _shortDate(dynamic raw) {
+    final str = (raw ?? '').toString();
+    if (str.isEmpty) return '-';
+    return str.split('T')[0];
+  }
 
   void _openAddSheet() {
     showModalBottomSheet(
@@ -182,6 +189,7 @@ class _EmployeeLedgerScreenState extends State<EmployeeLedgerScreen> {
                                 4: FixedColumnWidth(80),
                                 5: FixedColumnWidth(65),
                                 6: FixedColumnWidth(100),
+                                7: FixedColumnWidth(90),
                               },
                               children: [
                                 TableRow(
@@ -194,6 +202,7 @@ class _EmployeeLedgerScreenState extends State<EmployeeLedgerScreen> {
                                     _HeaderCell('السعر'),
                                     _HeaderCell('العدد'),
                                     _HeaderCell('الصنف'),
+                                    _HeaderCell('التاريخ'),
                                   ],
                                 ),
                                 for (final e in _entries)
@@ -224,6 +233,7 @@ class _EmployeeLedgerScreenState extends State<EmployeeLedgerScreen> {
                                       ),
                                       _DataCell(_fmt((e['quantity'] ?? 0) as num)),
                                       _DataCell(e['category']?.toString() ?? ''),
+                                      _DataCell(_shortDate(e['date'])),
                                     ],
                                   ),
                               ],
